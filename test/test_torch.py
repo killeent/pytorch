@@ -2377,6 +2377,7 @@ class TestTorch(TestCase):
         # indexing
 
         # TODO: add test for empty indexer
+        # TODO: add test for transposed (i.e. non-contig) tensor
 
         # Case 1: Purely Integer Array Indexing
         reference = self._consecutive((10))
