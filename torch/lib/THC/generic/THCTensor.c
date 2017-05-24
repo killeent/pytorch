@@ -301,7 +301,7 @@ THCTensor* THCTensor_(newExpand)(THCState *state, THCTensor *tensor, THLongStora
   return result;
 }
 
-int THCTensor_(expand)(THCState *state, THCTensor *r, THCTensor *tensor, THLongStorage *sizes, int raiseErrors) 
+int THCTensor_(expand)(THCState *state, THCTensor *r, THCTensor *tensor, THLongStorage *sizes, int raiseErrors)
 {
   THArgCheck(THCTensor_(nDimension)(state, tensor) > 0, 0, "can't expand an empty tensor");
   if (raiseErrors) {
@@ -388,6 +388,43 @@ THC_API int THCTensor_(expand3)(THCState *state, THCTensor *ra, THCTensor *rb, T
   ret = THCTensor_(expand)(state, rc, opc, sizes, raiseErrors);
   THAssert(ret == 0); // since we inferred this already, it must be valid
 
+  THLongStorage_free(sizes);
+  return 0;
+}
+
+THC_API int THCTensor_(expandNd)(THCState *state, THCTensor **rets, THCTensor **ops, int count, int raiseErrors) {
+  for (int i = 0; i < count; ++i) {
+    THArgCheck(THCTensor_(nDimension)(state, ops[i]) > 0, i, "can't expand empty tensor %d", i);
+  }
+
+  long **op_sizes = THAlloc(sizeof(long**)*count);
+  long *op_dims = THAlloc(sizeof(long*)*count);
+
+  for (int i = 0; i < count; ++i) {
+    op_sizes[i] = ops[i]->size;
+    op_dims[i] = ops[i]->nDimension;
+  }
+
+  THLongStorage *sizes = THLongStorage_new();
+  int ret = THLongStorage_inferSizeN(sizes,
+                                     count,
+                                     op_sizes,
+                                     op_dims,
+                                     raiseErrors);
+
+  if(ret != 0) {
+    THFree(op_sizes);
+    THFree(op_dims);
+    return ret;
+  }
+
+  for (int i = 0; i < count; ++i) {
+    ret = THCTensor_(expand)(state, rets[i], ops[i], sizes, raiseErrors);
+    THAssert(ret == 0);
+  }
+
+  THFree(op_sizes);
+  THFree(op_dims);
   THLongStorage_free(sizes);
   return 0;
 }
