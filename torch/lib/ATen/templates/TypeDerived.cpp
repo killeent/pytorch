@@ -46,6 +46,11 @@ std::unique_ptr<Generator> ${Type}::generator() {
 const char * ${Type}::toString() const {
   return ${Type}::typeString();
 }
+
+std::size_t ${Type}::elementSizeInBytes() const {
+  return sizeof(${ScalarType});
+}
+
 TypeID ${Type}::ID() const {
   return ${TypeID};
 }
